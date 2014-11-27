@@ -322,39 +322,8 @@ define(['jquery',
                             if (typeof json == 'string')
                                 json = $.parseJSON(response);
 
-                            for (var i = 0 ; i < json.downloaded_files.length ; i++) {
-
-                                var _i = i;
-
-                                /* Monitor the progress. */
-                                _this.CONFIG.timers_map[json.downloaded_files[i]] = setInterval(function () {
-
-                                    $.ajax({
-
-                                        url: 'http://localhost:5555/download/progress/' + json.id + '/' + json.downloaded_files[_i] + '/',
-                                        type: 'GET',
-                                        success: function (response) {
-
-                                            /* Cast the response to JSON, if needed. */
-                                            var json = response;
-                                            if (typeof json == 'string')
-                                                json = $.parseJSON(response);
-
-                                            try {
-                                                console.debug(json.file_name + ': ' + json.progress + '%');
-                                                if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
-                                                    clearInterval(_this.CONFIG.timers_map[json.file_name])
-                                                }
-                                            } catch (e) {
-
-                                            }
-
-                                        }
-
-                                    });
-                                }, 1000);
-
-                            }
+                            /* Monitor progress. */
+                            _this.monitor_progress(json);
 
                         }
 
@@ -363,6 +332,47 @@ define(['jquery',
                 }
 
             });
+
+        }
+
+    };
+
+    UI_MODIS.prototype.monitor_progress = function(download_response) {
+
+        /* This. */
+        var _this = this;
+
+        for (var i = 0 ; i < download_response.downloaded_files.length ; i++) {
+
+            var _i = i;
+
+            /* Monitor the progress. */
+            _this.CONFIG.timers_map[download_response.downloaded_files[i]] = setInterval(function () {
+
+                $.ajax({
+
+                    url: 'http://localhost:5555/download/progress/' + download_response.id + '/' + download_response.downloaded_files[_i] + '/',
+                    type: 'GET',
+                    success: function (response) {
+
+                        /* Cast the response to JSON, if needed. */
+                        var json = response;
+                        if (typeof json == 'string')
+                            json = $.parseJSON(response);
+
+                        try {
+                            console.debug(json.file_name + ': ' + json.progress + '%');
+                            if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
+                                clearInterval(_this.CONFIG.timers_map[json.file_name])
+                            }
+                        } catch (e) {
+
+                        }
+
+                    }
+
+                });
+            }, 1000);
 
         }
 
