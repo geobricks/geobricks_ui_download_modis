@@ -44,7 +44,8 @@ define(['jquery',
                 275: 31,
                 306: 30,
                 336: 31
-            }
+            },
+            timers_map: {}
         };
 
     }
@@ -320,6 +321,40 @@ define(['jquery',
                             var json = response;
                             if (typeof json == 'string')
                                 json = $.parseJSON(response);
+
+                            for (var i = 0 ; i < json.downloaded_files.length ; i++) {
+
+                                var _i = i;
+
+                                /* Monitor the progress. */
+                                _this.CONFIG.timers_map[json.downloaded_files[i]] = setInterval(function () {
+
+                                    $.ajax({
+
+                                        url: 'http://localhost:5555/download/progress/' + json.id + '/' + json.downloaded_files[_i] + '/',
+                                        type: 'GET',
+                                        success: function (response) {
+
+                                            /* Cast the response to JSON, if needed. */
+                                            var json = response;
+                                            if (typeof json == 'string')
+                                                json = $.parseJSON(response);
+
+                                            try {
+                                                console.debug(json.file_name + ': ' + json.progress + '%');
+                                                if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
+                                                    clearInterval(_this.CONFIG.timers_map[json.file_name])
+                                                }
+                                            } catch (e) {
+
+                                            }
+
+                                        }
+
+                                    });
+                                }, 1000);
+
+                            }
 
                         }
 
