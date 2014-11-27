@@ -11,10 +11,40 @@ define(['jquery',
     function UI_MODIS() {
 
         this.CONFIG = {
-            lang: 'en',
-            placeholder_id: 'placeholder',
-            url_countries: 'http://localhost:5555/browse/modis/countries/',
-            url_products: 'http://localhost:5555/browse/modis/'
+            lang:               'en',
+            url_products:       'http://localhost:5555/browse/modis/',
+            url_download:       'http://localhost:5555/download/modis/',
+            url_countries:      'http://localhost:5555/browse/modis/countries/',
+            placeholder_id:     'placeholder',
+            url_browse_modis:   'http://localhost:5555/browse/modis/',
+            days_of_the_month: {
+                1: 31,
+                32: 28,
+                60: 31,
+                91: 30,
+                121: 31,
+                152: 30,
+                182: 31,
+                213: 31,
+                244: 30,
+                274: 31,
+                305: 30,
+                335: 31
+            },
+            days_of_the_month_leap: {
+                1: 31,
+                32: 28,
+                61: 31,
+                92: 30,
+                122: 31,
+                153: 30,
+                184: 31,
+                214: 31,
+                245: 30,
+                275: 31,
+                306: 30,
+                336: 31
+            }
         };
 
     }
@@ -136,7 +166,10 @@ define(['jquery',
                 s += '<option value=""></option>';
                 for (var i = 0 ; i < json.length ; i++) {
                     s += '<option ';
-                    s += 'value="' + json[i].code + '">';
+                    s += 'value="' + json[i].code + '"';
+                    s += 'data-temporal="' + json[i].temporal_resolution + '"';
+                    s += 'data-spatial="' + json[i].spatial_resolution + '"';
+                    s += '>';
                     s += json[i].label;
                     s += '</option>';
                 }
@@ -239,6 +272,83 @@ define(['jquery',
 
     UI_MODIS.prototype.download = function() {
 
+        /* Create the URL's to fetch MODIS layers. */
+        var urls = this.create_modis_urls();
+
+        for (var i = 0 ; i < urls.length ; i++) {
+            console.debug(urls[i]);
+        }
+
+    };
+
+    UI_MODIS.prototype.create_modis_urls = function() {
+
+        /* Initiate the output. */
+        var urls = [];
+
+        /* Collect user's selection. */
+        var countries = this.countries_selector.find('option:selected');
+        var gauls = [];
+        for (var i = 0 ; i < countries.length ; i++)
+            gauls.push($(countries[i]).data('gaul'));
+        var product = this.products_selector.val();
+        var year = this.year_selector.val();
+        var tmp_from_date = this.from_date_selector.val();
+        var tmp_to_date = this.to_date_selector.val();
+
+        /* Fix errors, if any. */
+        var from_date = parseInt(tmp_to_date) < parseInt(tmp_from_date) ? tmp_to_date : tmp_from_date;
+        var to_date = parseInt(tmp_to_date) < parseInt(tmp_from_date) ? tmp_from_date : tmp_to_date;
+
+        /* create the URL's according to the temporal resolution. */
+        var temporal_resolution = $(this.products_selector.find('option:selected')).data('temporal');
+        switch (temporal_resolution) {
+            case 'Yearly':
+                var url = this.CONFIG.url_browse_modis + product + '/' + year + '/' + from_date + '/' + gauls.join(',');
+                urls.push(url);
+                break;
+            case '16 day':
+                for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += 16)
+                    urls.push(this.create_modis_url(product, year, i, gauls));
+                break;
+            case '8 day':
+                for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += 8)
+                    urls.push(this.create_modis_url(product, year, i, gauls));
+                break;
+            case '4 day':
+                for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += 4)
+                    urls.push(this.create_modis_url(product, year, i, gauls));
+                break;
+            case 'Daily':
+                for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i++)
+                    urls.push(this.create_modis_url(product, year, i, gauls));
+                break;
+            case 'Monthly':
+                if (parseInt(year) % 4 != 0) {
+                    for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += this.CONFIG.days_of_the_month[i])
+                        urls.push(this.create_modis_url(product, year, i, gauls));
+                } else {
+                    for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += this.CONFIG.days_of_the_month_leap[i])
+                        urls.push(this.create_modis_url(product, year, i, gauls));
+                }
+                break;
+        }
+
+        /* Return the output. */
+        return urls;
+    };
+
+    UI_MODIS.prototype.create_modis_url = function(product, year, day_of_the_year, gauls) {
+        var s = '';
+        s += this.CONFIG.url_browse_modis + product + '/' + year + '/';
+        if (day_of_the_year < 10)
+            s += '00' + day_of_the_year;
+        else if (day_of_the_year >= 10 && day_of_the_year < 100)
+            s += '0' + day_of_the_year;
+        else
+            s += day_of_the_year;
+        s += '/' + gauls.join(',');
+        return s;
     };
 
     return new UI_MODIS();
