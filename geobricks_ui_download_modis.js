@@ -272,11 +272,63 @@ define(['jquery',
 
     UI_MODIS.prototype.download = function() {
 
+        /* This. */
+        var _this = this;
+
         /* Create the URL's to fetch MODIS layers. */
         var urls = this.create_modis_urls();
 
+        /* Fetch MODIS layers for each URL. */
         for (var i = 0 ; i < urls.length ; i++) {
-            console.debug(urls[i]);
+
+            var _i = i;
+
+            $.ajax({
+
+                type: 'GET',
+                url: urls[_i].url,
+
+                success: function (response) {
+
+                    /* Cast the response to JSON, if needed. */
+                    var json = response;
+                    if (typeof json == 'string')
+                        json = $.parseJSON(response);
+
+                    /* Prepare the payload for the REST service. */
+                    var data = {};
+                    data.target_root = null;
+                    data.layers_to_be_downloaded = json;
+                    data.file_system_structure = {
+                        'product': urls[_i].product,
+                        'year': urls[_i].year,
+                        'day': urls[_i].day
+                    };
+
+                    /* Download selected layers. */
+                    $.ajax({
+
+                        url: _this.CONFIG.url_download,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: JSON.stringify(data),
+                        contentType: 'application/json',
+
+                        success: function (response) {
+
+                            /* Cast the response to JSON, if needed. */
+                            var json = response;
+                            if (typeof json == 'string')
+                                json = $.parseJSON(response);
+
+                        }
+
+                    });
+
+                }
+
+            });
+
         }
 
     };
@@ -340,15 +392,22 @@ define(['jquery',
 
     UI_MODIS.prototype.create_modis_url = function(product, year, day_of_the_year, gauls) {
         var s = '';
+        var day = '';
         s += this.CONFIG.url_browse_modis + product + '/' + year + '/';
         if (day_of_the_year < 10)
-            s += '00' + day_of_the_year;
+            day += '00' + day_of_the_year;
         else if (day_of_the_year >= 10 && day_of_the_year < 100)
-            s += '0' + day_of_the_year;
+            day += '0' + day_of_the_year;
         else
-            s += day_of_the_year;
-        s += '/' + gauls.join(',');
-        return s;
+            day += day_of_the_year;
+        s += day + '/' + gauls.join(',');
+        var url_obj = {
+            url: s,
+            product: product,
+            year: year,
+            day: day
+        };
+        return url_obj;
     };
 
     return new UI_MODIS();
