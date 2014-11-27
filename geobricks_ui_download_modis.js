@@ -237,6 +237,10 @@ define(['jquery',
         });
     };
 
+    UI_MODIS.prototype.download = function() {
+
+    };
+
     return new UI_MODIS();
 
 });
