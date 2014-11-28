@@ -303,38 +303,8 @@ define(['jquery',
                         if (typeof json == 'string')
                             json = $.parseJSON(response);
 
-                        /* Prepare the payload for the REST service. */
-                        var data = {};
-                        data.target_root = null;
-                        data.layers_to_be_downloaded = json;
-                        data.file_system_structure = {
-                            'product': urls[_i].product,
-                            'year': urls[_i].year,
-                            'day': urls[_i].day
-                        };
-
                         /* Download selected layers. */
-                        $.ajax({
-
-                            url: _this.CONFIG.url_download,
-                            type: 'POST',
-                            dataType: 'json',
-                            data: JSON.stringify(data),
-                            contentType: 'application/json',
-
-                            success: function (response) {
-
-                                /* Cast the response to JSON, if needed. */
-                                var json = response;
-                                if (typeof json == 'string')
-                                    json = $.parseJSON(response);
-
-                                /* Monitor progress. */
-                                _this.monitor_progress(json);
-
-                            }
-
-                        });
+                        _this.download_selected_layers(urls[_i], json);
 
                     }
 
@@ -351,6 +321,47 @@ define(['jquery',
             });
         }
 
+    };
+
+    UI_MODIS.prototype.download_selected_layers = function(url_object, browse_modis_response) {
+
+        /* This. */
+        var _this = this;
+
+        /* Prepare the payload for the REST service. */
+        var data = {};
+        data.target_root = null;
+        data.layers_to_be_downloaded = browse_modis_response;
+        data.file_system_structure = {
+            'product': url_object.product,
+            'year': url_object.year,
+            'day': url_object.day
+        };
+
+        // TODO: create a tab for this download
+
+        /* Download selected layers. */
+        $.ajax({
+
+            url: _this.CONFIG.url_download,
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+
+            success: function (response) {
+
+                /* Cast the response to JSON, if needed. */
+                var json = response;
+                if (typeof json == 'string')
+                    json = $.parseJSON(response);
+
+                /* Monitor progress. */
+                _this.monitor_progress(json);
+
+            }
+
+        });
 
     };
 
