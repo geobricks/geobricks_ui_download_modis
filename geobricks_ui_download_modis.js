@@ -13,6 +13,7 @@ define(['jquery',
         this.CONFIG = {
             lang:               'en',
             url_products:       'http://localhost:5555/browse/modis/',
+            url_progress:       'http://localhost:5555/download/progress/',
             url_download:       'http://localhost:5555/download/modis/',
             url_countries:      'http://localhost:5555/browse/modis/countries/',
             placeholder_id:     'placeholder',
@@ -273,67 +274,77 @@ define(['jquery',
 
     UI_MODIS.prototype.download = function() {
 
-        /* This. */
-        var _this = this;
+        try {
 
-        /* Create the URL's to fetch MODIS layers. */
-        var urls = this.create_modis_urls();
+            /* Validate user's selection. */
+            this.validate_user_selection();
 
-        /* Fetch MODIS layers for each URL. */
-        for (var i = 0 ; i < urls.length ; i++) {
+            /* This. */
+            var _this = this;
 
-            var _i = i;
+            /* Create the URL's to fetch MODIS layers. */
+            var urls = this.create_modis_urls();
 
-            $.ajax({
+            /* Fetch MODIS layers for each URL. */
+            for (var i = 0; i < urls.length; i++) {
 
-                type: 'GET',
-                url: urls[_i].url,
+                var _i = i;
 
-                success: function (response) {
+                $.ajax({
 
-                    /* Cast the response to JSON, if needed. */
-                    var json = response;
-                    if (typeof json == 'string')
-                        json = $.parseJSON(response);
+                    type: 'GET',
+                    url: urls[_i].url,
 
-                    /* Prepare the payload for the REST service. */
-                    var data = {};
-                    data.target_root = null;
-                    data.layers_to_be_downloaded = json;
-                    data.file_system_structure = {
-                        'product': urls[_i].product,
-                        'year': urls[_i].year,
-                        'day': urls[_i].day
-                    };
+                    success: function (response) {
 
-                    /* Download selected layers. */
-                    $.ajax({
+                        /* Cast the response to JSON, if needed. */
+                        var json = response;
+                        if (typeof json == 'string')
+                            json = $.parseJSON(response);
 
-                        url: _this.CONFIG.url_download,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: JSON.stringify(data),
-                        contentType: 'application/json',
+                        /* Prepare the payload for the REST service. */
+                        var data = {};
+                        data.target_root = null;
+                        data.layers_to_be_downloaded = json;
+                        data.file_system_structure = {
+                            'product': urls[_i].product,
+                            'year': urls[_i].year,
+                            'day': urls[_i].day
+                        };
 
-                        success: function (response) {
+                        /* Download selected layers. */
+                        $.ajax({
 
-                            /* Cast the response to JSON, if needed. */
-                            var json = response;
-                            if (typeof json == 'string')
-                                json = $.parseJSON(response);
+                            url: _this.CONFIG.url_download,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: JSON.stringify(data),
+                            contentType: 'application/json',
 
-                            /* Monitor progress. */
-                            _this.monitor_progress(json);
+                            success: function (response) {
 
-                        }
+                                /* Cast the response to JSON, if needed. */
+                                var json = response;
+                                if (typeof json == 'string')
+                                    json = $.parseJSON(response);
 
-                    });
+                                /* Monitor progress. */
+                                _this.monitor_progress(json);
 
-                }
+                            }
 
-            });
+                        });
 
+                    }
+
+                });
+
+            }
+
+        } catch(e) {
+            alert(e);
         }
+
 
     };
 
@@ -347,32 +358,33 @@ define(['jquery',
             var _i = i;
 
             /* Monitor the progress. */
-            _this.CONFIG.timers_map[download_response.downloaded_files[i]] = setInterval(function () {
-
-                $.ajax({
-
-                    url: 'http://localhost:5555/download/progress/' + download_response.id + '/' + download_response.downloaded_files[_i] + '/',
-                    type: 'GET',
-                    success: function (response) {
-
-                        /* Cast the response to JSON, if needed. */
-                        var json = response;
-                        if (typeof json == 'string')
-                            json = $.parseJSON(response);
-
-                        try {
-                            console.debug(json.file_name + ': ' + json.progress + '%');
-                            if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
-                                clearInterval(_this.CONFIG.timers_map[json.file_name])
-                            }
-                        } catch (e) {
-
-                        }
-
-                    }
-
-                });
-            }, 1000);
+            //_this.CONFIG.timers_map[download_response.downloaded_files[i]] = setInterval(function () {
+            //
+            //    $.ajax({
+            //
+            //        url: _this.CONFIG.url_progress + download_response.id + '/' +
+            //             download_response.downloaded_files[_i] + '/',
+            //        type: 'GET',
+            //        success: function (response) {
+            //
+            //            /* Cast the response to JSON, if needed. */
+            //            var json = response;
+            //            if (typeof json == 'string')
+            //                json = $.parseJSON(response);
+            //
+            //            try {
+            //                console.debug(json.file_name + ': ' + json.progress + '%');
+            //                if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
+            //                    clearInterval(_this.CONFIG.timers_map[json.file_name])
+            //                }
+            //            } catch (e) {
+            //
+            //            }
+            //
+            //        }
+            //
+            //    });
+            //}, 1000);
 
         }
 
@@ -453,6 +465,19 @@ define(['jquery',
             day: day
         };
         return url_obj;
+    };
+
+    UI_MODIS.prototype.validate_user_selection = function() {
+        if (this.countries_selector.val() == null)
+            throw translate.please_select_country;
+        if (this.products_selector.val() == null || this.products_selector.val() == '')
+            throw translate.please_select_product;
+        if (this.year_selector.val() == null || this.year_selector.val() == '')
+            throw translate.please_select_year;
+        if (this.from_date_selector.val() == null || this.from_date_selector.val() == '')
+            throw translate.please_select_from_date;
+        if (this.to_date_selector.val() == null || this.to_date_selector.val() == '')
+            throw translate.please_select_to_date;
     };
 
     return new UI_MODIS();
