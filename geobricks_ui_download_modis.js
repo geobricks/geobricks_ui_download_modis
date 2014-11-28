@@ -47,7 +47,21 @@ define(['jquery',
                 306: 30,
                 336: 31
             },
-            timers_map: {}
+            timers_map: {},
+            months: [
+                translate.jan,
+                translate.feb,
+                translate.mar,
+                translate.apr,
+                translate.may,
+                translate.jun,
+                translate.jul,
+                translate.aug,
+                translate.sep,
+                translate.oct,
+                translate.nov,
+                translate.dec
+            ]
         };
 
     }
@@ -287,30 +301,8 @@ define(['jquery',
             var urls = this.create_modis_urls();
 
             /* Fetch MODIS layers for each URL. */
-            for (var i = 0; i < urls.length; i++) {
-
-                var _i = i;
-
-                $.ajax({
-
-                    type: 'GET',
-                    url: urls[_i].url,
-
-                    success: function (response) {
-
-                        /* Cast the response to JSON, if needed. */
-                        var json = response;
-                        if (typeof json == 'string')
-                            json = $.parseJSON(response);
-
-                        /* Download selected layers. */
-                        _this.download_selected_layers(urls[_i], json);
-
-                    }
-
-                });
-
-            }
+            for (var i = 0; i < urls.length; i++)
+                _this.fetch_modis_layers(urls[i]);
 
         } catch(e) {
             sweetAlert({
@@ -323,7 +315,38 @@ define(['jquery',
 
     };
 
-    UI_MODIS.prototype.download_selected_layers = function(url_object, browse_modis_response) {
+    UI_MODIS.prototype.fetch_modis_layers = function(url_object) {
+
+        /* This. */
+        var _this = this;
+
+        $.ajax({
+
+            type: 'GET',
+            url: url_object.url,
+
+            success: function (response) {
+
+                /* Cast the response to JSON, if needed. */
+                var browse_modis_response = response;
+                if (typeof browse_modis_response == 'string')
+                    browse_modis_response = $.parseJSON(response);
+
+                // Download layers. */
+                _this.download_layers(url_object, browse_modis_response);
+
+            }
+
+        });
+
+    };
+
+    UI_MODIS.prototype.create_tab_label = function(year, doty) {
+        var d = new Date(year, 0, parseInt(doty));
+        return d.getDate() + ' ' + this.CONFIG.months[d.getMonth()] + ' ' + (1900 + d.getYear());
+    };
+
+    UI_MODIS.prototype.download_layers = function(url_object, browse_modis_response) {
 
         /* This. */
         var _this = this;
@@ -338,7 +361,15 @@ define(['jquery',
             'day': url_object.day
         };
 
-        // TODO: create a tab for this download
+        /* Create a progress tab for this download. */
+        require(['geobricks_ui_download_progress'], function (MODULE) {
+            MODULE.init({
+                lang: _this.CONFIG.lang,
+                files_to_be_downloaded: browse_modis_response,
+                tab_label: _this.create_tab_label(url_object.year, url_object.day),
+                tab_id: url_object.product + '_' + url_object.year + url_object.day
+            });
+        });
 
         /* Download selected layers. */
         $.ajax({
