@@ -4,6 +4,7 @@ define(['jquery',
         'mustache',
         'text!' + root + 'geobricks_ui_download_modis/html/templates.html',
         'i18n!' + root + 'geobricks_ui_download_modis/nls/translate',
+        'sweet-alert',
         'bootstrap'], function ($, Mustache, templates, translate) {
 
     'use strict';
@@ -342,7 +343,12 @@ define(['jquery',
             }
 
         } catch(e) {
-            alert(e);
+            sweetAlert({
+                title: translate.warning,
+                text: e,
+                type: 'warning',
+                confirmButtonColor: '#379BCE'
+            });
         }
 
 

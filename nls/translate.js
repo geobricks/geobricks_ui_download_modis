@@ -10,7 +10,8 @@ define({
         please_select_product: 'Please select a MODIS product.',
         please_select_year: 'Please select a year.',
         please_select_from_date: 'Please select the from date.',
-        please_select_to_date: 'Please select the to date.'
+        please_select_to_date: 'Please select the to date.',
+        warning: 'Warning'
     },
     fr : true,
     es : true
