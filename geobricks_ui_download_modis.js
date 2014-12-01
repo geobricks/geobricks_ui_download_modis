@@ -14,7 +14,6 @@ define(['jquery',
         this.CONFIG = {
             lang:               'en',
             url_products:       'http://localhost:5555/browse/modis/',
-            url_progress:       'http://localhost:5555/download/progress/',
             url_download:       'http://localhost:5555/download/modis/',
             url_countries:      'http://localhost:5555/browse/modis/countries/',
             placeholder_id:     'placeholder',
@@ -47,7 +46,6 @@ define(['jquery',
                 306: 30,
                 336: 31
             },
-            timers_map: {},
             months: [
                 translate.jan,
                 translate.feb,
@@ -341,11 +339,6 @@ define(['jquery',
 
     };
 
-    UI_MODIS.prototype.create_tab_label = function(year, doty) {
-        var d = new Date(year, 0, parseInt(doty));
-        return d.getDate() + ' ' + this.CONFIG.months[d.getMonth()] + ' ' + (1900 + d.getYear());
-    };
-
     UI_MODIS.prototype.download_layers = function(url_object, browse_modis_response) {
 
         /* This. */
@@ -363,79 +356,45 @@ define(['jquery',
 
         /* Create a progress tab for this download. */
         require(['geobricks_ui_download_progress'], function (MODULE) {
+
             MODULE.init({
                 lang: _this.CONFIG.lang,
                 files_to_be_downloaded: browse_modis_response,
                 tab_label: _this.create_tab_label(url_object.year, url_object.day),
                 tab_id: url_object.product + '_' + url_object.year + url_object.day
             });
-        });
 
-        /* Download selected layers. */
-        $.ajax({
+            /* Download selected layers. */
+            $.ajax({
 
-            url: _this.CONFIG.url_download,
-            type: 'POST',
-            dataType: 'json',
-            data: JSON.stringify(data),
-            contentType: 'application/json',
+                url: _this.CONFIG.url_download,
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
 
-            success: function (response) {
+                success: function (response) {
 
-                /* Cast the response to JSON, if needed. */
-                var json = response;
-                if (typeof json == 'string')
-                    json = $.parseJSON(response);
+                    /* Cast the response to JSON, if needed. */
+                    var json = response;
+                    if (typeof json == 'string')
+                        json = $.parseJSON(response);
 
-                /* Monitor progress. */
-                _this.monitor_progress(json);
+                    /* Monitor progress. */
+                    for (var i = 0 ; i < json.downloaded_files.length ; i++)
+                        MODULE.update_progress_bar(json.id, json.downloaded_files[i]);
 
-            }
+                }
+
+            });
 
         });
 
     };
 
-    UI_MODIS.prototype.monitor_progress = function(download_response) {
-
-        /* This. */
-        var _this = this;
-
-        for (var i = 0 ; i < download_response.downloaded_files.length ; i++) {
-
-            var _i = i;
-
-            /* Monitor the progress. */
-            //_this.CONFIG.timers_map[download_response.downloaded_files[i]] = setInterval(function () {
-            //
-            //    $.ajax({
-            //
-            //        url: _this.CONFIG.url_progress + download_response.id + '/' +
-            //             download_response.downloaded_files[_i] + '/',
-            //        type: 'GET',
-            //        success: function (response) {
-            //
-            //            /* Cast the response to JSON, if needed. */
-            //            var json = response;
-            //            if (typeof json == 'string')
-            //                json = $.parseJSON(response);
-            //
-            //            try {
-            //                console.debug(json.file_name + ': ' + json.progress + '%');
-            //                if (json.status == 'COMPLETE' || parseInt(json.progress == 100)) {
-            //                    clearInterval(_this.CONFIG.timers_map[json.file_name])
-            //                }
-            //            } catch (e) {
-            //
-            //            }
-            //
-            //        }
-            //
-            //    });
-            //}, 1000);
-
-        }
-
+    UI_MODIS.prototype.create_tab_label = function(year, doty) {
+        var d = new Date(year, 0, parseInt(doty));
+        return d.getDate() + ' ' + this.CONFIG.months[d.getMonth()] + ' ' + (1900 + d.getYear());
     };
 
     UI_MODIS.prototype.create_modis_urls = function() {
@@ -506,13 +465,12 @@ define(['jquery',
         else
             day += day_of_the_year;
         s += day + '/' + gauls.join(',');
-        var url_obj = {
+        return {
             url: s,
             product: product,
             year: year,
             day: day
         };
-        return url_obj;
     };
 
     UI_MODIS.prototype.validate_user_selection = function() {
