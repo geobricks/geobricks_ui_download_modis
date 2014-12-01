@@ -388,10 +388,17 @@ define(['jquery',
 
             });
 
+            /* Process the layers after the download is complete. */
+            require(['geobricks_ui_processing'], function (PROCESSING) {
+                MODULE.on_progress_complete_action = function(filenames) {
+                    console.debug('custom implementation for ' + filenames);
+                    PROCESSING.init({
+                        lang: _this.CONFIG.lang,
+                        filenames: filenames
+                    });
+                };
+            });
 
-            //MODULE.on_progress_complete_action = function(filename) {
-            //    console.debug('custom implementation for ' + filename);
-            //};
 
 
         });
