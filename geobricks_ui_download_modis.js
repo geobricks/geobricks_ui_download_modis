@@ -388,6 +388,12 @@ define(['jquery',
 
             });
 
+
+            //MODULE.on_progress_complete_action = function(filename) {
+            //    console.debug('custom implementation for ' + filename);
+            //};
+
+
         });
 
     };
