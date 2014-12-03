@@ -401,7 +401,8 @@ define(['jquery',
             /* Process the layers after the download is complete. */
             module.on_progress_complete_action = function (target_dir, filenames) {
                 require(['GEOBRICKS_UI_PROCESSING'], function (PROCESSING) {
-                    PROCESSING.init({
+                    var processing = new PROCESSING();
+                    processing.init({
                         lang: _this.CONFIG.lang,
                         filenames: filenames,
                         target_dir: target_dir
@@ -468,6 +469,14 @@ define(['jquery',
                     for (i = parseInt(from_date) ; i <= parseInt(to_date) ; i += this.CONFIG.days_of_the_month_leap[i])
                         urls.push(this.create_modis_url(product, year, i, gauls));
                 }
+                break;
+            default:
+                sweetAlert({
+                    title: translate.warning,
+                    text: translate.nasa_warning,
+                    type: 'warning',
+                    confirmButtonColor: '#379BCE'
+                });
                 break;
         }
 

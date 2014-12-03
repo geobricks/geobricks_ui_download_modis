@@ -12,6 +12,7 @@ define({
         please_select_from_date: 'Please select the from date.',
         please_select_to_date: 'Please select the to date.',
         warning: 'Warning',
+        nasa_warning: 'The requested service is temporarily unavailable. It is either overloaded or under maintenance. Please try later.',
         jan: 'Jan',
         feb: 'Feb',
         mar: 'Mar',
