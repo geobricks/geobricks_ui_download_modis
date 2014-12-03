@@ -1,9 +1,7 @@
-var root = '../modules/';
-
 define(['jquery',
         'mustache',
-        'text!' + root + 'geobricks_ui_download_modis/html/templates.html',
-        'i18n!' + root + 'geobricks_ui_download_modis/nls/translate',
+        'text!geobricks_ui_download_modis/html/templates.html',
+        'i18n!geobricks_ui_download_modis/nls/translate',
         'sweet-alert',
         'bootstrap'], function ($, Mustache, templates, translate) {
 
@@ -298,6 +296,12 @@ define(['jquery',
             /* Create the URL's to fetch MODIS layers. */
             var urls = this.create_modis_urls();
 
+            /* Remove old tabs. */
+            require(['GEOBRICKS_UI_DOWNLOAD_PROGRESS'], function (MODULE) {
+                var module = new MODULE();
+                module.remove_old_tabs();
+            });
+
             /* Fetch MODIS layers for each URL. */
             for (var i = 0; i < urls.length; i++)
                 _this.fetch_modis_layers(urls[i]);
@@ -354,10 +358,16 @@ define(['jquery',
             'day': url_object.day
         };
 
-        /* Create a progress tab for this download. */
-        require(['geobricks_ui_download_progress'], function (MODULE) {
+        console.debug(url_object.product + ' ' + url_object.year + ' ' + url_object.day);
 
-            MODULE.init({
+        /* Create a progress tab for this download. */
+        require(['GEOBRICKS_UI_DOWNLOAD_PROGRESS'], function (MODULE) {
+
+            var module =  new MODULE();
+
+            console.debug(MODULE);
+
+            module.init({
                 lang: _this.CONFIG.lang,
                 files_to_be_downloaded: browse_modis_response,
                 tab_label: _this.create_tab_label(url_object.year, url_object.day),
@@ -382,24 +392,22 @@ define(['jquery',
 
                     /* Monitor progress. */
                     for (var i = 0 ; i < json.downloaded_files.length ; i++)
-                        MODULE.update_progress_bar(json.id, json.downloaded_files[i]);
+                        module.update_progress_bar(json.id, json.downloaded_files[i]);
 
                 }
 
             });
 
             /* Process the layers after the download is complete. */
-            require(['geobricks_ui_processing'], function (PROCESSING) {
-                MODULE.on_progress_complete_action = function(target_dir, filenames) {
+            module.on_progress_complete_action = function (target_dir, filenames) {
+                require(['GEOBRICKS_UI_PROCESSING'], function (PROCESSING) {
                     PROCESSING.init({
                         lang: _this.CONFIG.lang,
                         filenames: filenames,
                         target_dir: target_dir
                     });
-                };
-            });
-
-
+                });
+            };
 
         });
 
