@@ -90,18 +90,18 @@ define(['jquery',
         $('#' + this.CONFIG.placeholder_id).html(render);
 
         /* Cache JQuery selectors. */
-        this.countries_selector = $('#countries_selector');
-        this.products_selector = $('#products_selector');
         this.year_selector = $('#year_selector');
-        this.from_date_selector = $('#from_date_selector');
         this.to_date_selector = $('#to_date_selector');
+        this.products_selector = $('#products_selector');
+        this.countries_selector = $('#countries_selector');
+        this.from_date_selector = $('#from_date_selector');
 
         /* Initiate Chosen drop-downs. */
-        this.countries_selector.select2({disable_search_threshold: 10});
-        this.products_selector.select2({disable_search_threshold: 10});
-        this.year_selector.select2({disable_search_threshold: 10});
-        this.from_date_selector.select2({disable_search_threshold: 10});
-        this.to_date_selector.select2({disable_search_threshold: 10});
+        this.year_selector.select2();
+        this.to_date_selector.select2();
+        this.products_selector.select2();
+        this.from_date_selector.select2();
+        this.countries_selector.select2();
 
         /* Populate countries. */
         this.populate_countries();
@@ -130,9 +130,7 @@ define(['jquery',
                     json = $.parseJSON(response);
 
                 /* Sort countries by label. */
-                var countries = json.sort(function(a, b) {
-                    return a.gaul_label > b.gaul_label;
-                });
+                var countries = _.sortBy(json, 'gaul_label');
 
                 /* Fill the drop-down. */
                 var s = '';
