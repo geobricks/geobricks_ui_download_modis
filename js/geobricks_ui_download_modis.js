@@ -2,6 +2,7 @@ define(['jquery',
         'mustache',
         'text!geobricks_ui_download_modis/html/templates.hbs',
         'i18n!geobricks_ui_download_modis/nls/translate',
+        'select2',
         'sweet-alert',
         'bootstrap'], function ($, Mustache, templates, translate) {
 
@@ -96,11 +97,11 @@ define(['jquery',
         this.to_date_selector = $('#to_date_selector');
 
         /* Initiate Chosen drop-downs. */
-        this.countries_selector.chosen({disable_search_threshold: 10});
-        this.products_selector.chosen({disable_search_threshold: 10});
-        this.year_selector.chosen({disable_search_threshold: 10});
-        this.from_date_selector.chosen({disable_search_threshold: 10});
-        this.to_date_selector.chosen({disable_search_threshold: 10});
+        this.countries_selector.select2({disable_search_threshold: 10});
+        this.products_selector.select2({disable_search_threshold: 10});
+        this.year_selector.select2({disable_search_threshold: 10});
+        this.from_date_selector.select2({disable_search_threshold: 10});
+        this.to_date_selector.select2({disable_search_threshold: 10});
 
         /* Populate countries. */
         this.populate_countries();
