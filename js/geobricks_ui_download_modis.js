@@ -442,6 +442,7 @@ define(['jquery',
 
         /* create the URL's according to the temporal resolution. */
         var temporal_resolution = $(this.products_selector.find('option:selected')).data('temporal');
+        console.log(temporal_resolution);
         switch (temporal_resolution) {
             case 'Yearly':
                 var url = this.CONFIG.url_browse_modis + product + '/' + year + '/' + from_date + '/' + gauls.join(',');
@@ -483,6 +484,8 @@ define(['jquery',
         }
 
         /* Return the output. */
+        for (var i = 0 ; i < urls.length ; i++)
+            console.log(urls[i].url);
         return urls;
     };
 
