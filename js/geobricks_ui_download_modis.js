@@ -173,6 +173,9 @@ define(['jquery',
                 if (typeof json == 'string')
                     json = $.parseJSON(response);
 
+                /* Sort by code. */
+                json = _.sortBy(json, 'code');
+
                 /* Fill the drop-down. */
                 var s = '';
                 s += '<option value=""></option>';
