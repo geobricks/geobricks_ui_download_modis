@@ -396,6 +396,10 @@ define(['jquery',
                     for (var i = 0 ; i < json.downloaded_files.length ; i++)
                         module.update_progress_bar(json.id, json.downloaded_files[i]);
 
+                },
+
+                error: function(a) {
+                    console.log(a);
                 }
 
             });
